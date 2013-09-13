@@ -55,12 +55,12 @@ else
 
     headers["Content-Type"] = "text/html; charset=utf-8"
     say(render_template([[
-<div class="sharecounts" data-for="${url}">
+<p class="sharecounts" data-for="${url}" style="display:none;">
     <span class="facebook-count"    data-n="${fbcount}">${fbcount} fb total.</span>    
     <span class="facebook-shares"   data-n="${fbshares}">${fbshares} likes.</span>    
     <span class="facebook-comments" data-n="${fbcomments}">${fbcomments} comments.</span>    
     <span class="twitter-count"     data-n="${twcount}">${twcount} tweets.</span>    
-</div>]], {
+</p>]], {
         url = article_url,
         fbcount = facebook.count, 
         fbshares = facebook.shares, 
