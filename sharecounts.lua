@@ -7,14 +7,15 @@ local request = ngx.location.capture
 local headers = ngx.header
 
 local facebook_api = settings.facebook_api
-local twitter_api = settings.twitter_api -- .. '1/urls/count.json'
+local twitter_api = settings.twitter_api 
 local uri_args = req.get_uri_args()
 local article_url = uri_args.url
 
 function get_json(url, args)
     local resp = request(url, { args = args })
     if resp.status == 200 then
-        return cjson.decode(resp.body)
+        local _,result = pcall(cjson.decode, resp.body)
+        return result
     end
     return nil
 end
@@ -28,52 +29,38 @@ function render_template(template, environment)
     return result
 end
 
---[[
-function calculate_repr_type(accept)
-    if accept and accept:matchthen
-        return "text/html; charset=utf-8"
+function get_facebook_count()
+    local resp = get_json(facebook_api, { id = article_url })
+    local shares = resp and resp.shares or 0
+    local comments = resp and resp.comments or 0
+    local count = shares + comments
+    return { shares = shares, comments = comments, count = count }
 end
-]]
+
+function get_twitter_count()
+    local resp = get_json(twitter_api, { url = article_url }) 
+    return { count = resp and resp.count or 0 }
+end
 
 if not article_url then
     headers["Content-Type"] = "application/json"
     say(cjson.encode({}))
 else
-    local facebook_json = get_json(facebook_api, { id = article_url })
-    local facebook_shares = facebook_json and facebook_json.shares or 0
-    local facebook_comments = facebook_json and facebook_json.comments or 0
-    local facebook_count = (facebook_shares + facebook_comments)
-
-    local twitter_json = get_json(twitter_api, { url = article_url }) 
-    local twitter_count = twitter_json and twitter_json.count or 0
-
-    --local repr = calculate_repr_type(req_headers["Accept"])
+    local facebook = get_facebook_count()
+    local twitter = get_twitter_count()
 
     headers["Content-Type"] = "text/html; charset=utf-8"
     say(render_template([[
-<div class="sharecounts" data-for="">
-    <span class="facebook-count">${fbcount}</span>    
-    <span class="facebook-shares">${fbshares}</span>    
-    <span class="facebook-comments">${fbcomments}</span>    
-    <span class="twitter-count">${twcount}</span>    
+<div class="sharecounts" data-for="${url}">
+    <span class="facebook-count"    data-n="${fbcount}">${fbcount} fb total.</span>    
+    <span class="facebook-shares"   data-n="${fbshares}">${fbshares} likes.</span>    
+    <span class="facebook-comments" data-n="${fbcomments}">${fbcomments} comments.</span>    
+    <span class="twitter-count"     data-n="${twcount}">${twcount} tweets.</span>    
 </div>]], {
-    fbcount = facebook_count, 
-    fbshares = facebook_shares, 
-    fbcomments = facebook_comments, 
-    twcount = twitter_count}))
-
-    --[[
-    say(cjson.encode({ 
         url = article_url,
-        facebook = {
-            shares = facebook_shares,
-            comments = facebook_comments,
-            count = facebook_shares + facebook_comments
-        },
-        twitter = {
-            count = twitter_count
-        }
+        fbcount = facebook.count, 
+        fbshares = facebook.shares, 
+        fbcomments = facebook.comments, 
+        twcount = twitter.count,
     }))
-    ]]
-
 end
