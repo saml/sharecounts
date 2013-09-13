@@ -1,6 +1,8 @@
 local say = ngx.say
 local log = ngx.log
 local ERR = ngx.ERR
+local INFO = ngx.INFO
+local encode_args = ngx.encode_args
 local req = ngx.req
 local req_headers = req.get_headers()
 local request = ngx.location.capture
@@ -11,7 +13,9 @@ local twitter_api = settings.twitter_api
 local uri_args = req.get_uri_args()
 local article_url = uri_args.url
 
+
 function get_json(url, args)
+    --log(INFO, url .. '?' .. encode_args(args))
     local resp = request(url, { args = args })
     if resp.status == 200 then
         local _,result = pcall(cjson.decode, resp.body)
