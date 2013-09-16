@@ -55,7 +55,7 @@ else
 
     headers["Content-Type"] = "text/html; charset=utf-8"
     say(render_template([[
-<p class="sharecounts" data-for="${url}" style="display:none;">
+<p class="sharecounts" data-for="${url}">
     <span class="facebook-count"    data-n="${fbcount}">${fbcount} fb total.</span>    
     <span class="facebook-shares"   data-n="${fbshares}">${fbshares} likes.</span>    
     <span class="facebook-comments" data-n="${fbcomments}">${fbcomments} comments.</span>    
